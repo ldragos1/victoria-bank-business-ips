@@ -22,7 +22,8 @@
   "files": [
     "dist",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=18"
@@ -50,6 +51,10 @@
     "bnm",
     "nestjs"
   ],
+  "homepage": "https://github.com/ldragos1/victoria-bank-business-ips#readme",
+  "bugs": {
+    "url": "https://github.com/ldragos1/victoria-bank-business-ips/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ldragos1/victoria-bank-business-ips.git"

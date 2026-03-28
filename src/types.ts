@@ -162,6 +162,14 @@ export interface VictoriaBankClientConfig {
   initialTokens?: StoredTokens;
   /** Custom fetch (defaults to global `fetch`). */
   fetch?: typeof fetch;
+  /** Request timeout in milliseconds (default **30000** — 30 s). Set `0` to disable. */
+  timeoutMs?: number;
+  /**
+   * Max retries on transient errors (5xx / network). Default **2**.
+   * Set `0` to disable retry. Retries use exponential backoff (500ms, 1000ms, …).
+   * 401 retry (token refresh) is always enabled regardless of this setting.
+   */
+  retries?: number;
 }
 
 export interface StoredTokens {
@@ -174,6 +182,11 @@ export interface StoredTokens {
 }
 
 export class VictoriaBankApiError extends Error {
+  /** Bank error code when present (e.g. `"VB10403"`, `"EQ1"`). */
+  public readonly errorCode?: string;
+  /** Bank trace reference UUID for support/debugging. */
+  public readonly traceReference?: string;
+
   constructor(
     message: string,
     public readonly status: number,
@@ -181,5 +194,11 @@ export class VictoriaBankApiError extends Error {
   ) {
     super(message);
     this.name = "VictoriaBankApiError";
+
+    if (body && typeof body === "object") {
+      const b = body as Record<string, unknown>;
+      if (typeof b.errorCode === "string") this.errorCode = b.errorCode;
+      if (typeof b.traceReference === "string") this.traceReference = b.traceReference;
+    }
   }
 }

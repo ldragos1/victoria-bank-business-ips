@@ -26,16 +26,15 @@ export interface ClientFromEnvInput {
   onTokens?: VictoriaBankClientConfig["onTokens"];
   fetch?: typeof fetch;
   tokenRefreshBufferMs?: number;
+  timeoutMs?: number;
+  retries?: number;
 }
 
 /** Build {@link VictoriaBankClient} from explicit settings (e.g. after reading `process.env`). */
 export function createClientFromSettings(
   input: ClientFromEnvInput
 ): VictoriaBankClient {
-  const config: VictoriaBankClientConfig & {
-    initialTokens?: StoredTokens;
-    tokenRefreshBufferMs?: number;
-  } = {
+  return new VictoriaBankClient({
     baseUrl: input.baseUrl ?? defaultBaseUrlTest,
     username: input.username,
     password: input.password,
@@ -43,14 +42,17 @@ export function createClientFromSettings(
     initialTokens: input.initialTokens,
     fetch: input.fetch,
     tokenRefreshBufferMs: input.tokenRefreshBufferMs,
-  };
-  return new VictoriaBankClient(config);
+    timeoutMs: input.timeoutMs,
+    retries: input.retries,
+  });
 }
 
 export interface CreateClientFromEnvOptions {
   onTokens?: VictoriaBankClientConfig["onTokens"];
   fetch?: typeof fetch;
   tokenRefreshBufferMs?: number;
+  timeoutMs?: number;
+  retries?: number;
 }
 
 /**
@@ -90,6 +92,8 @@ export function createClientFromEnv(
     initialTokens,
     fetch: options?.fetch,
     tokenRefreshBufferMs: options?.tokenRefreshBufferMs,
+    timeoutMs: options?.timeoutMs,
+    retries: options?.retries,
   });
 }
 

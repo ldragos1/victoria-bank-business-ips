@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **GitHub Actions** — CI runs `npm run check`, `npm test`, and `npm run build` on every push and pull request (Node.js 18, 20, 22).
+- README **Security** section — tokens, rotation, secrets in production.
+- **Structured errors** — `VictoriaBankApiError` now exposes `errorCode` and `traceReference` from bank error responses; error messages include `[errorCode] — description` when available.
+- **Request timeout** — configurable `timeoutMs` (default 30 s) using `AbortSignal.timeout()`.
+- **Retry on transient errors** — 5xx and network failures are retried up to `retries` times (default 2) with exponential backoff (500 ms, 1 s, …).
+- **LICENSE** file (MIT) added to repository and npm tarball.
+- **`homepage`** and **`bugs`** fields in `package.json` for npm / GitHub links.
 
 ## [1.1.0] - 2026-03-28
 

@@ -144,7 +144,9 @@ console.log(qr.qrExtensionUUID, qr.qrAsImage);
 | `initialTokens` | Resume a session (`StoredTokens` from a previous run). |
 | `onTokens` | Called whenever tokens change — persist `refreshToken` securely. |
 | `fetch` | Custom `fetch` (tests, proxies, or non-global fetch). |
-| `tokenRefreshBufferMs` | Refresh access token this many ms before expiry (default **60000**). |
+| `tokenRefreshBufferMs` | Refresh access token this many ms before expiry (default **60 000**). |
+| `timeoutMs` | Per-request timeout in milliseconds (default **30 000**). Set `0` to disable. |
+| `retries` | Max retries on transient errors (5xx / network). Default **2**. Uses exponential backoff (500 ms, 1 s, …). |
 
 ## Settings and environment variables
 
@@ -244,13 +246,31 @@ No `authenticate()`, no manual env mapping, no NestJS adapter needed.
 
 ## Errors
 
-Failures throw **`VictoriaBankApiError`** with **`status`** and **`body`** (JSON when parseable; otherwise plain text).
+Failures throw **`VictoriaBankApiError`** with:
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `status` | `number` | HTTP status code |
+| `body` | `unknown` | Parsed JSON when possible; raw string otherwise |
+| `errorCode` | `string?` | Bank error code when present (e.g. `"VB10403"`, `"EQ1"`) |
+| `traceReference` | `string?` | Bank trace UUID for support tickets |
+
+When the bank returns a structured error (`{ errorCode, description, traceReference }`), the **`message`** includes the code and description automatically:
+
+> `Token request failed: 401 — [VB10403] — IDX10230: Lifetime validation failed…`
 
 ```typescript
 import { VictoriaBankApiError } from "victoria-bank-business-ips";
 
-if (error instanceof VictoriaBankApiError) {
-  console.error(error.status, error.body);
+try {
+  await client.authenticate();
+} catch (e) {
+  if (e instanceof VictoriaBankApiError) {
+    console.error(e.message);        // human-readable with errorCode + description
+    console.error(e.errorCode);      // "VB10403"
+    console.error(e.traceReference); // "a19df424-..."
+    console.error(e.status);         // 401
+  }
 }
 ```
 
@@ -265,6 +285,12 @@ Output (`dist/`):
 - `index.js` + `index.js.map` — ESM
 - `index.cjs` + `index.cjs.map` — CommonJS (NestJS / `require()`)
 - `index.d.ts` + `index.d.cts` — TypeScript declarations
+
+## Security
+
+- **Never log** `accessToken` or `refreshToken` (application logs, APM, error trackers, or `console.log` of API responses).
+- If tokens **leak**, treat it as an incident: **rotate** API credentials with the bank where applicable, **invalidate** stored tokens, and issue new sessions.
+- In **production**, keep **username**, **password**, and any persisted token JSON in a **secrets manager** or other encrypted configuration — not committed files or shared `.env` in chat.
 
 ## License
 

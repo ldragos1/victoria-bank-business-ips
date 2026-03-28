@@ -12,6 +12,9 @@ import {
 } from "./types";
 
 const DEFAULT_REFRESH_BUFFER_MS = 60_000;
+const DEFAULT_TIMEOUT_MS = 30_000;
+const DEFAULT_RETRIES = 2;
+const RETRY_BASE_DELAY_MS = 500;
 
 function joinUrl(base: string, path: string): string {
   const b = base.replace(/\/+$/, "");
@@ -27,6 +30,25 @@ function parseJsonSafe(text: string): unknown {
   }
 }
 
+function isTransientError(status: number): boolean {
+  return status >= 500;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function buildErrorMessage(prefix: string, body: unknown): string {
+  if (body && typeof body === "object") {
+    const b = body as Record<string, unknown>;
+    const parts: string[] = [prefix];
+    if (typeof b.errorCode === "string") parts.push(`[${b.errorCode}]`);
+    if (typeof b.description === "string") parts.push(b.description);
+    if (parts.length > 1) return parts.join(" — ");
+  }
+  return prefix;
+}
+
 export class VictoriaBankClient {
   private readonly baseUrl: string;
   private readonly username: string;
@@ -38,6 +60,8 @@ export class VictoriaBankClient {
   private expiresAtAccess = 0;
   private expiresAtRefresh = 0;
   private refreshBufferMs: number;
+  private readonly timeoutMs: number;
+  private readonly retries: number;
 
   constructor(config: VictoriaBankClientConfig & { tokenRefreshBufferMs?: number }) {
     this.baseUrl = config.baseUrl.replace(/\/+$/, "");
@@ -46,6 +70,8 @@ export class VictoriaBankClient {
     this.fetchImpl = config.fetch ?? globalThis.fetch;
     this.onTokens = config.onTokens;
     this.refreshBufferMs = config.tokenRefreshBufferMs ?? DEFAULT_REFRESH_BUFFER_MS;
+    this.timeoutMs = config.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    this.retries = config.retries ?? DEFAULT_RETRIES;
 
     if (config.initialTokens) {
       this.hydrateTokens(config.initialTokens);
@@ -114,23 +140,46 @@ export class VictoriaBankClient {
     }
   }
 
+  private buildSignal(): AbortSignal | undefined {
+    if (this.timeoutMs > 0) return AbortSignal.timeout(this.timeoutMs);
+    return undefined;
+  }
+
   private async postFormToken(body: URLSearchParams): Promise<TokenResponse> {
     const url = joinUrl(this.baseUrl, "/api/identity/token");
-    const res = await this.fetchImpl(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: body.toString(),
-    });
-    const text = await res.text();
-    const parsed = parseJsonSafe(text) as TokenResponse | Record<string, unknown>;
-    if (!res.ok) {
-      throw new VictoriaBankApiError(
-        `Token request failed: ${res.status}`,
-        res.status,
-        parsed
-      );
+
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.retries; attempt++) {
+      if (attempt > 0) await sleep(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
+
+      let res: Response;
+      try {
+        res = await this.fetchImpl(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: body.toString(),
+          signal: this.buildSignal(),
+        });
+      } catch (e) {
+        lastError = e;
+        if (attempt < this.retries) continue;
+        throw e;
+      }
+
+      const text = await res.text();
+      const parsed = parseJsonSafe(text) as TokenResponse | Record<string, unknown>;
+      if (!res.ok) {
+        lastError = new VictoriaBankApiError(
+          buildErrorMessage(`Token request failed: ${res.status}`, parsed),
+          res.status,
+          parsed
+        );
+        if (isTransientError(res.status) && attempt < this.retries) continue;
+        throw lastError;
+      }
+      return parsed as TokenResponse;
     }
-    return parsed as TokenResponse;
+    throw lastError;
   }
 
   private async ensureAccessToken(): Promise<string> {
@@ -172,36 +221,55 @@ export class VictoriaBankClient {
       }
       url += `?${sp.toString()}`;
     }
-    const headers: Record<string, string> = {};
-    if (jsonBody !== undefined) {
-      headers["Content-Type"] = "application/json";
-    }
-    if (auth) {
-      const token = await this.ensureAccessToken();
-      headers.Authorization = `Bearer ${token}`;
-    }
-    const res = await this.fetchImpl(url, {
-      method,
-      headers,
-      body: jsonBody !== undefined ? JSON.stringify(jsonBody) : undefined,
-    });
-    const text = await res.text();
-    if (res.status === 204) {
-      return undefined as T;
-    }
-    const parsed = text ? parseJsonSafe(text) : null;
-    if (!res.ok) {
-      if (res.status === 401 && auth && !isRetryAfter401) {
-        await this.refreshAccessToken();
-        return this.request<T>(method, path, options, true);
+
+    let lastError: unknown;
+    for (let attempt = 0; attempt <= this.retries; attempt++) {
+      if (attempt > 0) await sleep(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
+
+      const headers: Record<string, string> = {};
+      if (jsonBody !== undefined) {
+        headers["Content-Type"] = "application/json";
       }
-      throw new VictoriaBankApiError(
-        `HTTP ${res.status}: ${method} ${path}`,
-        res.status,
-        parsed
-      );
+      if (auth) {
+        const token = await this.ensureAccessToken();
+        headers.Authorization = `Bearer ${token}`;
+      }
+
+      let res: Response;
+      try {
+        res = await this.fetchImpl(url, {
+          method,
+          headers,
+          body: jsonBody !== undefined ? JSON.stringify(jsonBody) : undefined,
+          signal: this.buildSignal(),
+        });
+      } catch (e) {
+        lastError = e;
+        if (attempt < this.retries) continue;
+        throw e;
+      }
+
+      const text = await res.text();
+      if (res.status === 204) {
+        return undefined as T;
+      }
+      const parsed = text ? parseJsonSafe(text) : null;
+      if (!res.ok) {
+        if (res.status === 401 && auth && !isRetryAfter401) {
+          await this.refreshAccessToken();
+          return this.request<T>(method, path, options, true);
+        }
+        lastError = new VictoriaBankApiError(
+          buildErrorMessage(`HTTP ${res.status}: ${method} ${path}`, parsed),
+          res.status,
+          parsed
+        );
+        if (isTransientError(res.status) && attempt < this.retries) continue;
+        throw lastError;
+      }
+      return parsed as T;
     }
-    return parsed as T;
+    throw lastError;
   }
 
   /**

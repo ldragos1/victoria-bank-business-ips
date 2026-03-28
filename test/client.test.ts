@@ -179,17 +179,23 @@ describe("VictoriaBankClient", () => {
     expect(getCalls.length).toBe(2);
   });
 
-  it("throws VictoriaBankApiError on HTTP errors", async () => {
+  it("throws VictoriaBankApiError with errorCode and traceReference on HTTP errors", async () => {
     const fetchMock = vi.fn(async () => {
-      return new Response(JSON.stringify({ errorCode: "VB10403" }), {
-        status: 500,
-      });
+      return new Response(
+        JSON.stringify({
+          traceReference: "abc-123",
+          errorCode: "VB10403",
+          description: "Lifetime validation failed.",
+        }),
+        { status: 500 }
+      );
     });
     const client = new VictoriaBankClient({
       baseUrl: "https://api.example",
       username: "u",
       password: "p",
       fetch: fetchMock as typeof fetch,
+      retries: 0,
       initialTokens: {
         accessToken: "t",
         refreshToken: "r",
@@ -202,9 +208,82 @@ describe("VictoriaBankClient", () => {
       expect.fail("expected throw");
     } catch (e) {
       expect(e).toBeInstanceOf(VictoriaBankApiError);
-      expect((e as VictoriaBankApiError).status).toBe(500);
-      expect((e as VictoriaBankApiError).body).toMatchObject({ errorCode: "VB10403" });
+      const err = e as VictoriaBankApiError;
+      expect(err.status).toBe(500);
+      expect(err.errorCode).toBe("VB10403");
+      expect(err.traceReference).toBe("abc-123");
+      expect(err.message).toContain("[VB10403]");
+      expect(err.message).toContain("Lifetime validation failed.");
+      expect(err.body).toMatchObject({ errorCode: "VB10403" });
     }
+  });
+
+  it("token endpoint includes errorCode and description in error message", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          traceReference: "trace-999",
+          errorCode: "VB10403",
+          description: "Invalid credentials.",
+        }),
+        { status: 401 }
+      );
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+    });
+    try {
+      await client.authenticate();
+      expect.fail("expected throw");
+    } catch (e) {
+      expect(e).toBeInstanceOf(VictoriaBankApiError);
+      const err = e as VictoriaBankApiError;
+      expect(err.status).toBe(401);
+      expect(err.errorCode).toBe("VB10403");
+      expect(err.traceReference).toBe("trace-999");
+      expect(err.message).toContain("Token request failed: 401");
+      expect(err.message).toContain("[VB10403]");
+      expect(err.message).toContain("Invalid credentials.");
+    }
+  });
+
+  it("retries on 5xx and eventually succeeds", async () => {
+    let callCount = 0;
+    const fetchMock = vi.fn(async () => {
+      callCount++;
+      if (callCount <= 2) {
+        return new Response('{"error":"internal"}', { status: 502 });
+      }
+      return new Response(tokenJson(), { status: 200 });
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+      retries: 2,
+    });
+    const tr = await client.authenticate();
+    expect(tr.accessToken).toBe("access-1");
+    expect(callCount).toBe(3);
+  });
+
+  it("retries on network error and eventually throws", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new TypeError("fetch failed");
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+      retries: 1,
+    });
+    await expect(client.authenticate()).rejects.toThrow("fetch failed");
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 
   it("onTokens is called when tokens are issued", async () => {
