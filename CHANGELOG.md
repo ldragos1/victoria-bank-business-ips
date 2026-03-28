@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **GitHub Actions** — CI runs `npm run check`, `npm test`, and `npm run build` on every push and pull request (Node.js 18, 20, 22).
+
 ## [1.1.0] - 2026-03-28
 
 ### Added
