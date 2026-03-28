@@ -1,0 +1,47 @@
+{
+  "name": "victoria-bank-business-ips",
+  "version": "1.0.0",
+  "description": "Node.js client for Victoria Bank Business IPS (MIA) Integration API — JWT auth, QR codes, reconciliation, signals helpers.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "keywords": [
+    "victoria-bank",
+    "moldova",
+    "ips",
+    "mia",
+    "qr",
+    "payments",
+    "bnm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ldragos1/victoria-bank-business-ips.git"
+  }
+}
