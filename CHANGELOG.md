@@ -7,16 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-28
+
 ### Added
 
-- **Dual ESM + CJS build** via `tsup` — NestJS, Express, and CommonJS apps can now `require()` the package.
-- NestJS usage example in README.
+- **Dual ESM + CJS build** via `tsup` — NestJS and CommonJS apps can `require()` the package.
+- **`createClientFromEnv()`** — one-line client from `process.env` (`VICTORIA_BANK_IPS_*`); optional `authenticate()` (auto-auth on first API call).
+- **`@types/node`** in devDependencies for typings.
+- TypeScript **`exports`** with separate `import` / `require` types (`index.d.ts` / `index.d.cts`).
+- NestJS example and simplified quick start in README.
 
 ### Changed
 
-- README: official **Victoria Bank Business IPS Integration API v2.0.18** section names mapped to SDK methods; abbreviations, reconciliation date format, reverse-transaction reference rule, and signals callback clarified.
-- `VictoriaBankClient` JSDoc: aligned method comments with PDF section titles (no runtime/API changes).
-- Build tooling: `tsc` → `tsup` for dual-format output; `tsc --noEmit` kept for type-checking.
+- README: official API v2.0.18 section names mapped to SDK methods; abbreviations, reconciliation dates, reverse-transaction reference, signals callback.
+- `VictoriaBankClient` JSDoc aligned with PDF section titles.
+- Build: `tsc` emit replaced by `tsup` bundle; `tsc --noEmit` for type-check.
 
 ## [1.0.0] - 2026-03-28
 

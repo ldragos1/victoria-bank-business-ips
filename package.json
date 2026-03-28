@@ -1,6 +1,6 @@
 {
   "name": "victoria-bank-business-ips",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Node.js client for Victoria Bank Business IPS (MIA) Integration API — JWT auth, QR codes, reconciliation, signals helpers.",
   "license": "MIT",
   "type": "module",
