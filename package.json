@@ -4,12 +4,19 @@
   "description": "Node.js client for Victoria Bank Business IPS (MIA) Integration API — JWT auth, QR codes, reconciliation, signals helpers.",
   "license": "MIT",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
     }
   },
   "files": [
@@ -21,11 +28,13 @@
     "node": ">=18"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
+    "tsup": "^8.4.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsup",
     "prepublishOnly": "npm run build",
     "check": "tsc --noEmit",
     "test": "vitest run",
@@ -38,7 +47,8 @@
     "mia",
     "qr",
     "payments",
-    "bnm"
+    "bnm",
+    "nestjs"
   ],
   "repository": {
     "type": "git",

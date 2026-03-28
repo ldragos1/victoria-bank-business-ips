@@ -7,10 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Dual ESM + CJS build** via `tsup` — NestJS, Express, and CommonJS apps can now `require()` the package.
+- NestJS usage example in README.
+
 ### Changed
 
 - README: official **Victoria Bank Business IPS Integration API v2.0.18** section names mapped to SDK methods; abbreviations, reconciliation date format, reverse-transaction reference rule, and signals callback clarified.
 - `VictoriaBankClient` JSDoc: aligned method comments with PDF section titles (no runtime/API changes).
+- Build tooling: `tsc` → `tsup` for dual-format output; `tsc --noEmit` kept for type-checking.
 
 ## [1.0.0] - 2026-03-28
 

@@ -15,8 +15,8 @@ export const envKeys = {
 
 export const defaultBaseUrlTest = "https://test-ipspj.victoriabank.md";
 
-import type { StoredTokens, VictoriaBankClientConfig } from "./types.js";
-import { VictoriaBankClient } from "./client.js";
+import type { StoredTokens, VictoriaBankClientConfig } from "./types";
+import { VictoriaBankClient } from "./client";
 
 export interface ClientFromEnvInput {
   baseUrl?: string;
@@ -45,6 +45,52 @@ export function createClientFromSettings(
     tokenRefreshBufferMs: input.tokenRefreshBufferMs,
   };
   return new VictoriaBankClient(config);
+}
+
+export interface CreateClientFromEnvOptions {
+  onTokens?: VictoriaBankClientConfig["onTokens"];
+  fetch?: typeof fetch;
+  tokenRefreshBufferMs?: number;
+}
+
+/**
+ * Build {@link VictoriaBankClient} directly from `process.env` using {@link envKeys}.
+ *
+ * Reads:
+ * - `VICTORIA_BANK_IPS_USERNAME` (required)
+ * - `VICTORIA_BANK_IPS_PASSWORD` (required)
+ * - `VICTORIA_BANK_IPS_BASE_URL` (optional; defaults to test URL)
+ * - `VICTORIA_BANK_IPS_STORED_TOKENS_JSON` (optional; restores previous session)
+ *
+ * Throws if required env vars are missing.
+ *
+ * No need to call `authenticate()` — the client auto-authenticates on the first API call.
+ */
+export function createClientFromEnv(
+  options?: CreateClientFromEnvOptions
+): VictoriaBankClient {
+  const username = process.env[envKeys.username];
+  const password = process.env[envKeys.password];
+
+  if (!username || !password) {
+    throw new Error(
+      `Missing required environment variables: ${envKeys.username} and/or ${envKeys.password}`
+    );
+  }
+
+  const baseUrl = process.env[envKeys.baseUrl] ?? defaultBaseUrlTest;
+  const storedJson = process.env[envKeys.storedTokensJson];
+  const initialTokens = storedJson ? parseStoredTokensJson(storedJson) : undefined;
+
+  return new VictoriaBankClient({
+    baseUrl,
+    username,
+    password,
+    onTokens: options?.onTokens,
+    initialTokens,
+    fetch: options?.fetch,
+    tokenRefreshBufferMs: options?.tokenRefreshBufferMs,
+  });
 }
 
 /**

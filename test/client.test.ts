@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import { VictoriaBankClient } from "../src/client.js";
-import { VictoriaBankApiError } from "../src/types.js";
+import { VictoriaBankClient } from "../src/client";
+import { VictoriaBankApiError } from "../src/types";
 
 function tokenJson() {
   return JSON.stringify({

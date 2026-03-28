@@ -9,7 +9,7 @@ import {
   type StoredTokens,
   type TokenResponse,
   type VictoriaBankClientConfig,
-} from "./types.js";
+} from "./types";
 
 const DEFAULT_REFRESH_BUFFER_MS = 60_000;
 

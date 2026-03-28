@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   extractRrnFromReference,
   splitPaymentReference,
-} from "../src/signal-utils.js";
+} from "../src/signal-utils";
 
 describe("extractRrnFromReference", () => {
   it("returns last 12 chars of 4th pipe segment (bank example)", () => {

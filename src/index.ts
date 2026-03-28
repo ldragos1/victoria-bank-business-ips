@@ -1,17 +1,19 @@
 export {
   VictoriaBankClient,
-} from "./client.js";
-export { DemoPayClient, type DemoPayClientConfig } from "./demo-pay.js";
+} from "./client";
+export { DemoPayClient, type DemoPayClientConfig } from "./demo-pay";
 export {
+  createClientFromEnv,
+  type CreateClientFromEnvOptions,
   createClientFromSettings,
   defaultBaseUrlTest,
   envKeys,
   parseStoredTokensJson,
-} from "./settings.js";
+} from "./settings";
 export {
   extractRrnFromReference,
   splitPaymentReference,
-} from "./signal-utils.js";
+} from "./signal-utils";
 export {
   VictoriaBankApiError,
   type BankSignalPayload,
@@ -37,4 +39,4 @@ export {
   type TokenResponse,
   type TtlUnit,
   type VictoriaBankClientConfig,
-} from "./types.js";
+} from "./types";

@@ -63,17 +63,45 @@ npm install victoria-bank-business-ips
 
 Requires **Node.js 18+** (global `fetch`).
 
+Works with **ESM** (`import`) and **CommonJS** (`require`) — compatible with **NestJS**, **Express**, **Fastify**, plain Node scripts, and any bundler.
+
 ## TypeScript
 
-The package ships `.d.ts` next to compiled ESM. In your `tsconfig.json`, use **`"moduleResolution": "NodeNext"`** or **`"Bundler"`** so `exports` and types resolve correctly.
+The package ships `.d.ts` alongside both ESM and CJS outputs. In your `tsconfig.json`, use **`"moduleResolution": "NodeNext"`** or **`"Bundler"`** so `exports` and types resolve correctly.
 
-## Quick start
+## Quick start — simplest usage
+
+Set environment variables and use `createClientFromEnv()`. No manual `authenticate()` call needed — the client authenticates automatically on the first API call.
+
+```bash
+export VICTORIA_BANK_IPS_USERNAME="your_username"
+export VICTORIA_BANK_IPS_PASSWORD="your_password"
+# optional:
+export VICTORIA_BANK_IPS_BASE_URL="https://test-ipspj.victoriabank.md"
+```
 
 ```typescript
-import {
-  VictoriaBankClient,
-  extractRrnFromReference,
-} from "victoria-bank-business-ips";
+import { createClientFromEnv } from "victoria-bank-business-ips";
+
+const client = createClientFromEnv();
+
+const qr = await client.createQr({
+  header: { qrType: "DYNM", amountType: "Fixed", pmtContext: "e" },
+  extension: {
+    creditorAccount: { iban: "MD00..." },
+    amount: { sum: 100.12, currency: "MDL" },
+    remittanceInfo4Payer: "Order #123",
+    ttl: { length: 360, units: "mm" },
+  },
+});
+
+console.log(qr.qrExtensionUUID, qr.qrAsImage);
+```
+
+## Quick start — full control
+
+```typescript
+import { VictoriaBankClient } from "victoria-bank-business-ips";
 
 const client = new VictoriaBankClient({
   baseUrl: "https://test-ipspj.victoriabank.md",
@@ -85,7 +113,9 @@ const client = new VictoriaBankClient({
   },
 });
 
-await client.authenticate();
+// authenticate() is optional — the client auto-authenticates on the first API call.
+// Call it explicitly only if you want to verify credentials early (fail fast).
+// await client.authenticate();
 
 const qr = await client.createQr(
   {
@@ -128,7 +158,7 @@ Suggested names (your app reads `process.env`):
 | `VICTORIA_BANK_IPS_STORED_TOKENS_JSON` | Optional JSON from `getStoredTokens()` |
 | `VICTORIA_BANK_IPS_DEMO_PAY_BASE_URL` | Demo payment simulator base (default: `https://test-ipspj-demopay.victoriabank.md`) |
 
-Helpers: `envKeys`, `defaultBaseUrlTest`, `createClientFromSettings(...)`, `parseStoredTokensJson(...)`.
+Helpers: `createClientFromEnv()`, `createClientFromSettings(...)`, `envKeys`, `defaultBaseUrlTest`, `parseStoredTokensJson(...)`.
 
 ## Token persistence
 
@@ -186,6 +216,32 @@ const { status, body } = await demo.pay(qrHeaderUUID);
 
 Swagger: [test-ipspj-demopay.victoriabank.md](https://test-ipspj-demopay.victoriabank.md/swagger/index.html)
 
+## Usage with NestJS
+
+```typescript
+import { Injectable } from "@nestjs/common";
+import { createClientFromEnv } from "victoria-bank-business-ips";
+
+@Injectable()
+export class VictoriaBankService {
+  private client = createClientFromEnv();
+
+  async createPaymentQr(iban: string, amount: number) {
+    return this.client.createQr({
+      header: { qrType: "DYNM", amountType: "Fixed", pmtContext: "e" },
+      extension: {
+        creditorAccount: { iban },
+        amount: { sum: amount, currency: "MDL" },
+        remittanceInfo4Payer: "Payment",
+        ttl: { length: 360, units: "mm" },
+      },
+    });
+  }
+}
+```
+
+No `authenticate()`, no manual env mapping, no NestJS adapter needed.
+
 ## Errors
 
 Failures throw **`VictoriaBankApiError`** with **`status`** and **`body`** (JSON when parseable; otherwise plain text).
@@ -205,7 +261,10 @@ npm install
 npm run build
 ```
 
-Output: `dist/` (ESM + `.d.ts`).
+Output (`dist/`):
+- `index.js` + `index.js.map` — ESM
+- `index.cjs` + `index.cjs.map` — CommonJS (NestJS / `require()`)
+- `index.d.ts` + `index.d.cts` — TypeScript declarations
 
 ## License
 

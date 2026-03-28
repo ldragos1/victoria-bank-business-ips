@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { DemoPayClient } from "../src/demo-pay.js";
+import { DemoPayClient } from "../src/demo-pay";
 
 describe("DemoPayClient", () => {
   it("POSTs qrHeaderUUID to /api/pay/", async () => {
