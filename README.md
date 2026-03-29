@@ -1,8 +1,8 @@
-# victoria-bank-business-ips
+# victoriabank-mia-integration
 
-[![npm version](https://img.shields.io/npm/v/victoria-bank-business-ips.svg)](https://www.npmjs.com/package/victoria-bank-business-ips)
-[![npm downloads](https://img.shields.io/npm/dm/victoria-bank-business-ips.svg)](https://www.npmjs.com/package/victoria-bank-business-ips)
-[![Node.js](https://img.shields.io/node/v/victoria-bank-business-ips.svg)](https://www.npmjs.com/package/victoria-bank-business-ips)
+[![npm version](https://img.shields.io/npm/v/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
+[![npm downloads](https://img.shields.io/npm/dm/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
+[![Node.js](https://img.shields.io/node/v/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/badge/GitHub-ldragos1%2Fvictoria--bank--business--ips-181717?logo=github)](https://github.com/ldragos1/victoria-bank-business-ips)
 
@@ -58,7 +58,7 @@ The PDF uses **section titles** (e.g. “New QR”, “QR Status”). This SDK u
 ## Install
 
 ```bash
-npm install victoria-bank-business-ips
+npm install victoriabank-mia-integration
 ```
 
 Requires **Node.js 18+** (global `fetch`).
@@ -81,7 +81,7 @@ export VICTORIA_BANK_IPS_BASE_URL="https://test-ipspj.victoriabank.md"
 ```
 
 ```typescript
-import { createClientFromEnv } from "victoria-bank-business-ips";
+import { createClientFromEnv } from "victoriabank-mia-integration";
 
 const client = createClientFromEnv();
 
@@ -101,7 +101,7 @@ console.log(qr.qrExtensionUUID, qr.qrAsImage);
 ## Quick start — full control
 
 ```typescript
-import { VictoriaBankClient } from "victoria-bank-business-ips";
+import { VictoriaBankClient } from "victoriabank-mia-integration";
 
 const client = new VictoriaBankClient({
   baseUrl: "https://test-ipspj.victoriabank.md",
@@ -209,7 +209,7 @@ Exported types: `BankSignalPayload`, `SignalCode`, etc. — see `dist/*.d.ts`.
 Separate host from the main IPS API. Not always described in the main integration PDF; see Swagger:
 
 ```typescript
-import { DemoPayClient } from "victoria-bank-business-ips";
+import { DemoPayClient } from "victoriabank-mia-integration";
 
 const demo = new DemoPayClient({ /* baseUrl?, fetch? */ });
 const { status, body } = await demo.pay(qrHeaderUUID);
@@ -222,7 +222,7 @@ Swagger: [test-ipspj-demopay.victoriabank.md](https://test-ipspj-demopay.victori
 
 ```typescript
 import { Injectable } from "@nestjs/common";
-import { createClientFromEnv } from "victoria-bank-business-ips";
+import { createClientFromEnv } from "victoriabank-mia-integration";
 
 @Injectable()
 export class VictoriaBankService {
@@ -260,7 +260,7 @@ When the bank returns a structured error (`{ errorCode, description, traceRefere
 > `Token request failed: 401 — [VB10403] — IDX10230: Lifetime validation failed…`
 
 ```typescript
-import { VictoriaBankApiError } from "victoria-bank-business-ips";
+import { VictoriaBankApiError } from "victoriabank-mia-integration";
 
 try {
   await client.authenticate();
