@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Ship the official **Victoria Bank Business IPS Integration API** specification PDF **v2.0.18** under `docs/` (included in the npm package).
+
 ## [1.0.1] - 2026-03-29
 
 ### Added

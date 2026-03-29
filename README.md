@@ -8,16 +8,24 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![GitHub](https://img.shields.io/badge/GitHub-ldragos1%2Fvictoria--bank--business--ips-181717?logo=github)](https://github.com/ldragos1/victoria-bank-business-ips)
 
-Node.js / TypeScript client for **Victoria Bank — Business IPS Integration API** (**IPS Business WebApi**), aligned with official specification **v2.0.18**.
+Node.js / TypeScript client for **Victoria Bank Business IPS Integration API** — official name **IPS Business WebApi**, specification **v2.0.18**. The API connects juridical persons’ systems (e‑commerce, invoicing, etc.) to the **Instant Payment System (IPS)** operated by the **National Bank of Moldova (BNM)** for real‑time payments, **Request to Pay (RTP)**, and QR‑based flows.
 
-| Authoritative docs | URL |
-|--------------------|-----|
-| **MIA Business (product)** | [Victoriabank — MIA Business (P2B)](https://www.victoriabank.md/en/operatiuni-curente/mia-business) |
-| **Swagger (test)** | [test-ipspj.victoriabank.md](https://test-ipspj.victoriabank.md/index.html) |
-| **PDF** (same version as this client) | *Victoria Bank Business IPS Integration API* **V2.0.18** (from the bank) |
+### API at a glance (test environment)
 
-**Base URL (test):** `https://test-ipspj.victoriabank.md`  
-**Authentication:** JWT — `Authorization: Bearer <accessToken>` on protected routes; tokens from **`POST /api/identity/token`** (password or refresh_token grant).
+| | |
+|--|--|
+| **API name** | IPS Business WebApi |
+| **Specification** | *Victoria Bank Business IPS Integration API* **v2.0.18** (this SDK tracks the same version) |
+| **Base URL** | `https://test-ipspj.victoriabank.md` |
+| **Auth** | JWT — `Authorization: Bearer <accessToken>` on protected routes; tokens from **`POST /api/identity/token`** (`application/x-www-form-urlencoded`, password or `refresh_token` grant). **HTTPS only** (all traffic must be TLS). |
+
+### Documentation
+
+| Source | Notes |
+|--------|--------|
+| **Integration PDF (v2.0.18)** | Authoritative specification — [Victoria Bank Business IPS Integration API](./docs/victoria-bank-business-ips-integration-api-v2.0.18.pdf) *(bundled in this repo and npm package; copyright Victoria Bank)*. |
+| **Swagger (test)** | Machine-readable API + try-it UI — [test-ipspj.victoriabank.md/index.html](https://test-ipspj.victoriabank.md/index.html) |
+| **MIA Business (product)** | Bank product page — [Victoriabank — MIA Business (P2B)](https://www.victoriabank.md/en/operatiuni-curente/mia-business) |
 
 ---
 
@@ -50,11 +58,14 @@ The PDF uses **section titles** (e.g. “New QR”, “QR Status”). This SDK u
 
 | Term | Meaning |
 |------|---------|
-| **IPS** | Instant Payment System (BNM) |
 | **BNM** | National Bank of Moldova |
-| **RTP** | Request to Pay |
+| **CBS** | Core Banking System |
+| **CAS** | Central Aliases Services |
 | **IBAN** | International Bank Account Number |
-| **MIA** | Messaging / integration context used in transaction identifiers |
+| **IPS** | Instant Payment System (national instant payments infrastructure) |
+| **MIA** | **MIA Business** — Victoria Bank’s business payment integration on **BNM IPS** (the product this API implements; also appears in fields such as `miaId` and payment type `IPSMIA`) |
+| **P2P** | Peer to peer |
+| **RTP** | Request to Pay |
 
 ---
 
@@ -180,31 +191,51 @@ The client refreshes access tokens before expiry (**`tokenRefreshBufferMs`**) an
 | **STAT** | Reusable; **90 days** validity from last payment (per bank rules). |
 | **HYBR** | Static QR; **extension** payload can change. |
 
-**Amount types:** `Fixed` | `Controlled` | `Free` — constraints depend on QR type (see PDF tables).
+**Amount types:** `Fixed` | `Controlled` | `Free` — which fields you send (`amount.sum` vs `amountMin` / `amountMax`) depends on the amount type; see the PDF **Amount Type** tables.
 
-**`pmtContext`:** `m` (mobile) \| `e` (e-commerce) \| `i` (invoice) \| **`o`** (other — **letter o**, not zero).
+**QR type × TTL / amount (summary from PDF):**
+
+| QR type | TTL on extension | Notes |
+|---------|------------------|--------|
+| **DYNM** | Required | Usually **Fixed** with `amount.sum`. |
+| **STAT** | Not required | **Controlled** uses `amountMin` / `amountMax`; **Free** has no fixed sum. |
+| **HYBR** | Required | Static QR; extension payload can be replaced. Often **Free** in examples. |
+
+**`pmtContext`:** `m` (mobile) \| `e` (e-commerce) \| `i` (invoice) \| **`o`** (other — **letter o**, not zero). In **v2.0.18** the value is the **letter** `o`, not the number `0`.
 
 ## Reverse transaction — `reference` parameter
 
-Per **v2.0.18**, `DELETE /api/v1/transaction/{reference}` expects the **external payment reference**: the **4th pipe-delimited segment** of the full IPS reference string (e.g. from signals or status endpoints), **not** the full `pacs.008…|…|…|…` line.
+Per **v2.0.18**, `DELETE /api/v1/transaction/{reference}` expects the **external payment reference**: the **entire 4th pipe-delimited segment** of the full IPS reference string (from signals, QR status, extension status, or reconciliation `miaId`), **not** the full `pacs.008…|…|…|…` line.
 
 Example full value (from PDF):
 
-`pacs.008.001.10|2025-04-23|VICBMD2X|VICBMD2XAXXX250423463390000017890` → use **`VICBMD2XAXXX250423463390000017890`** with `reverseTransaction(...)`.
+`pacs.008.001.10|2025-04-23|VICBMD2X|VICBMD2XAXXX250423463390000017890` → pass **`VICBMD2XAXXX250423463390000017890`** to `reverseTransaction(...)` (full segment).
 
-Helpers: `extractRrnFromReference`, `splitPaymentReference`.
+**RRN (Retrieval Reference Number)** — bank rule for display/parsing: split `reference` by `|`, take the **4th segment**, then take the **last 12 characters** (or the whole segment if shorter). Use **`extractRrnFromReference(reference)`** for that. The bank notes RRN is **not** guaranteed unique; do not use it as a sole primary key. **`reverseTransaction`** uses the **full** 4th segment, not the 12-character RRN substring.
+
+**Helpers:** `extractRrnFromReference`, `splitPaymentReference`.
 
 ## Reconciliation — date format
 
 **List of transactions** query parameters **`datefrom`** and **`dateto`** must be **`YYYY-MM-DD`** (PDF example: `2024-08-01` … `2024-08-13`).
 
+The JSON response uses the root key **`transactionsInfo`** (array of transaction rows). Reconciliation entries align **`miaId`** with the `reference` field in **Signals** when matching payments.
+
 ## Signals (inbound callback) — `POST /api/signals`
 
-The bank calls **your** URL with **`POST /api/signals`**. The request body is a **JSON string whose value is a JWT** (not a raw JSON object). Verify the signature using the bank public certificate (**`VBCA.crt`** in bank docs). Decoded payload matches signal objects (`signalCode`, `qrExtensionUUID`, `payment`, …).
+The bank calls **your** URL with **`POST /api/signals`**. The request body is a **JSON string whose value is a JWT** (not a raw JSON object). Verify the signature using the bank public certificate (**`VBCA.crt`** in bank docs). The bank recommends configuring **two** certificate keys where possible so JWT verification keeps working when certificates rotate.
+
+Decoded payload matches signal objects (`signalCode`, `qrExtensionUUID`, `payment`, …). Common **`signalCode`** values in the spec: **`Payment`**, **`Expiration`**, **`Inactivation`**.
 
 Exported types: `BankSignalPayload`, `SignalCode`, etc. — see `dist/*.d.ts`.
 
 **Polling fallback:** `getLastSignal(qrExtensionUUID)` maps to **Get Last Signal by QR Extension UUID**; the PDF recommends **POST `/api/signals`** as the primary integration.
+
+### Recommended integration flow (from bank guidance)
+
+1. Persist **`qrExtensionUUID`** from **`createQr`** (and optionally **`qrHeaderUUID`**) against your order or invoice.
+2. On **`POST /api/signals`**, locate the row by **`qrExtensionUUID`**; optionally store **`payment.reference`** for reversals and reconciliation.
+3. Use **`listTransactions`**, QR status, or extension status if you need to recover **`reference`** later without storing it.
 
 ## Demo payment simulator (test only)
 
@@ -250,6 +281,10 @@ No `authenticate()`, no manual env mapping, no NestJS adapter needed.
 
 ## Errors
 
+Bank JSON errors often include **`errorCode`** and **`description`**. **BNM / QR** codes may look like **`EQ1`**, **`EQV|…`** (facility + code); **Victoria Bank** codes typically use a **`VB`** prefix (e.g. **`VB10403`**). A separate bank attachment documents BNM QR messages; treat codes as authoritative for support.
+
+**HTTP:** **`401`** — missing/invalid `Authorization`, or expired access token. **`5xx`** — server-side; the client may **retry** (see `retries`). Successful responses are typically **`2xx`** (e.g. **`204`** for some deletes).
+
 Failures throw **`VictoriaBankApiError`** with:
 
 | Property | Type | Description |
@@ -290,11 +325,16 @@ Output (`dist/`):
 - `index.cjs` + `index.cjs.map` — CommonJS (NestJS / `require()`)
 - `index.d.ts` + `index.d.cts` — TypeScript declarations
 
+Specification PDF (also published on npm): `docs/victoria-bank-business-ips-integration-api-v2.0.18.pdf`.
+
 ## Security
 
+- **HTTPS only** — the API is not intended for plain HTTP.
 - **Never log** `accessToken` or `refreshToken` (application logs, APM, error trackers, or `console.log` of API responses).
+- **Store refresh tokens** securely; they can mint new access tokens until they expire.
 - If tokens **leak**, treat it as an incident: **rotate** API credentials with the bank where applicable, **invalidate** stored tokens, and issue new sessions.
 - In **production**, keep **username**, **password**, and any persisted token JSON in a **secrets manager** or other encrypted configuration — not committed files or shared `.env` in chat.
+- **Production base URL** and credentials are issued by **Victoria Bank**; the host in this README is the **test** environment unless your bank documentation states otherwise.
 
 ## License
 
