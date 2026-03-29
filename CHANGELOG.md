@@ -22,7 +22,7 @@ First release of **victoriabank-mia-integration** — Node.js / TypeScript clien
 - **`VictoriaBankClient`** — JWT auth (password + refresh), QR lifecycle, reconciliation, signals polling, configurable token refresh buffer and custom `fetch`.
 - **`DemoPayClient`** — test payment simulator against the bank demopay host.
 - **`createClientFromEnv()`** — one-line client from `process.env` (`VICTORIA_BANK_IPS_*`); optional `authenticate()` (auto-auth on first API call).
-- Settings helpers: `envKeys`, `defaultBaseUrlTest`, `createClientFromSettings`, `parseStoredTokensJson`.
+- Settings helpers: `envKeys`, `defaultBaseUrlTest`, `createClientFromSettings`.
 - Signal utilities: `extractRrnFromReference`, `splitPaymentReference`.
 - **`VictoriaBankApiError`** — structured errors with `errorCode` and `traceReference` from bank responses; messages include `[errorCode] — description` when available.
 - **Request timeout** — configurable `timeoutMs` (default 30 s) via `AbortSignal.timeout()`.

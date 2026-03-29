@@ -160,16 +160,15 @@ Suggested names (your app reads `process.env`):
 | `VICTORIA_BANK_IPS_BASE_URL` | API base URL (default test: `https://test-ipspj.victoriabank.md`) |
 | `VICTORIA_BANK_IPS_USERNAME` | API user |
 | `VICTORIA_BANK_IPS_PASSWORD` | API password |
-| `VICTORIA_BANK_IPS_STORED_TOKENS_JSON` | Optional JSON from `getStoredTokens()` |
 | `VICTORIA_BANK_IPS_DEMO_PAY_BASE_URL` | Demo payment simulator base (default: `https://test-ipspj-demopay.victoriabank.md`) |
 
-Helpers: `createClientFromEnv()`, `createClientFromSettings(...)`, `envKeys`, `defaultBaseUrlTest`, `parseStoredTokensJson(...)`.
+Helpers: `createClientFromEnv()`, `createClientFromSettings(...)`, `envKeys`, `defaultBaseUrlTest`.
 
 ## Token persistence
 
 1. Persist from **`onTokens`**, or snapshot via **`getStoredTokens()`**.
 2. Store: `JSON.stringify(client.getStoredTokens())` when not `null`.
-3. Restore: **`initialTokens: parseStoredTokensJson(saved)`** (or via `createClientFromSettings`).
+3. Restore: pass **`initialTokens`** to `VictoriaBankClient` or `createClientFromSettings`.
 
 The client refreshes access tokens before expiry (**`tokenRefreshBufferMs`**) and falls back to password grant if refresh returns 400/401.
 

@@ -4,30 +4,7 @@ import {
   createClientFromSettings,
   defaultBaseUrlTest,
   envKeys,
-  parseStoredTokensJson,
 } from "../src/settings";
-
-describe("parseStoredTokensJson", () => {
-  it("parses valid JSON", () => {
-    const json = JSON.stringify({
-      accessToken: "a",
-      refreshToken: "r",
-      expiresAtAccess: 100,
-      expiresAtRefresh: 200,
-    });
-    expect(parseStoredTokensJson(json)).toEqual({
-      accessToken: "a",
-      refreshToken: "r",
-      expiresAtAccess: 100,
-      expiresAtRefresh: 200,
-    });
-  });
-
-  it("returns undefined for invalid shape", () => {
-    expect(parseStoredTokensJson("{}")).toBeUndefined();
-    expect(parseStoredTokensJson("not json")).toBeUndefined();
-  });
-});
 
 describe("createClientFromSettings", () => {
   it("uses default base URL and returns a client", () => {
@@ -116,22 +93,4 @@ describe("createClientFromEnv", () => {
     expect(calls[0]).toBe("https://test-ipspj.victoriabank.md/api/identity/token");
   });
 
-  it("restores tokens from VICTORIA_BANK_IPS_STORED_TOKENS_JSON", () => {
-    vi.stubEnv(envKeys.username, "u");
-    vi.stubEnv(envKeys.password, "p");
-    vi.stubEnv(
-      envKeys.storedTokensJson,
-      JSON.stringify({
-        accessToken: "a",
-        refreshToken: "r",
-        expiresAtAccess: Date.now() + 3_600_000,
-        expiresAtRefresh: Date.now() + 18_000_000,
-      })
-    );
-
-    const client = createClientFromEnv();
-    const tokens = client.getStoredTokens();
-    expect(tokens).not.toBeNull();
-    expect(tokens!.accessToken).toBe("a");
-  });
 });
