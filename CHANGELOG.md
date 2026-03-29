@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`extractFourthSegmentFromReference`** — returns the full 4th pipe segment for `reverseTransaction` (distinct from RRN / last-12-chars).
 - Ship the official **Victoria Bank Business IPS Integration API** specification PDF **v2.0.18** under `docs/` (included in the npm package).
+
+### Fixed
+
+- **`extractRrnFromReference`** documentation: RRN helper is for display/parsing only, not reversals; clarified JSDoc and README.
 
 ## [1.0.1] - 2026-03-29
 

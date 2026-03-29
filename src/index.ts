@@ -10,6 +10,7 @@ export {
   envKeys,
 } from "./settings";
 export {
+  extractFourthSegmentFromReference,
   extractRrnFromReference,
   splitPaymentReference,
 } from "./signal-utils";

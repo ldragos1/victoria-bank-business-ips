@@ -348,7 +348,7 @@ export class VictoriaBankClient {
 
   /**
    * **Reverse transaction** — PDF: `reference` = 4th pipe-delimited segment only,
-   * not the full `pacs.008|…|…|…` string.
+   * not the full `pacs.008|…|…|…` string. Use **`extractFourthSegmentFromReference`** when you only have the full `payment.reference` line (do not use **`extractRrnFromReference`**, which is last-12-chars / RRN only).
    */
   async reverseTransaction(reference: string): Promise<void> {
     await this.request(

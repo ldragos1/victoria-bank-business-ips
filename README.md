@@ -211,11 +211,13 @@ Per **v2.0.18**, `DELETE /api/v1/transaction/{reference}` expects the **external
 
 Example full value (from the specification):
 
-`pacs.008.001.10|2025-04-23|VICBMD2X|VICBMD2XAXXX250423463390000017890` → pass **`VICBMD2XAXXX250423463390000017890`** to `reverseTransaction(...)` (full segment).
+`pacs.008.001.10|2025-04-23|VICBMD2X|VICBMD2XAXXX250423463390000017890` → pass **`VICBMD2XAXXX250423463390000017890`** to `reverseTransaction(...)` (full 4th segment only).
 
-**RRN (Retrieval Reference Number)** — bank rule for display/parsing: split `reference` by `|`, take the **4th segment**, then take the **last 12 characters** (or the whole segment if shorter). Use **`extractRrnFromReference(reference)`** for that. The bank notes RRN is **not** guaranteed unique; do not use it as a sole primary key. **`reverseTransaction`** uses the **full** 4th segment, not the 12-character RRN substring.
+Use **`extractFourthSegmentFromReference(fullReference)`** when you have the full pipe-delimited `payment.reference` string and need the value for **`reverseTransaction`** — do **not** use **`extractRrnFromReference`** for reversals (that helper returns only the last 12 characters of the 4th segment).
 
-**Helpers:** `extractRrnFromReference`, `splitPaymentReference`.
+**RRN (Retrieval Reference Number)** — for display / parsing only: the last **12** characters of the 4th segment (or the whole segment if ≤12 chars). Use **`extractRrnFromReference(reference)`**. The bank notes RRN is **not** guaranteed unique; do not use it as a sole primary key.
+
+**Helpers:** `extractFourthSegmentFromReference`, `extractRrnFromReference`, `splitPaymentReference`.
 
 ## Reconciliation — date format
 
