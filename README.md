@@ -1,5 +1,7 @@
 # victoriabank-mia-integration
 
+[![MIA Business (P2B) — Victoriabank](assets/mia-victoriabank-banner.png)](https://www.victoriabank.md/en/operatiuni-curente/mia-business)
+
 [![npm version](https://img.shields.io/npm/v/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
 [![npm downloads](https://img.shields.io/npm/dm/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
 [![Node.js](https://img.shields.io/node/v/victoriabank-mia-integration.svg)](https://www.npmjs.com/package/victoriabank-mia-integration)
@@ -10,6 +12,7 @@ Node.js / TypeScript client for **Victoria Bank — Business IPS Integration API
 
 | Authoritative docs | URL |
 |--------------------|-----|
+| **MIA Business (product)** | [Victoriabank — MIA Business (P2B)](https://www.victoriabank.md/en/operatiuni-curente/mia-business) |
 | **Swagger (test)** | [test-ipspj.victoriabank.md](https://test-ipspj.victoriabank.md/index.html) |
 | **PDF** (same version as this client) | *Victoria Bank Business IPS Integration API* **V2.0.18** (from the bank) |
 
@@ -207,6 +210,8 @@ Exported types: `BankSignalPayload`, `SignalCode`, etc. — see `dist/*.d.ts`.
 ## Demo payment simulator (test only)
 
 Separate host from the main IPS API. Not always described in the main integration PDF; see Swagger:
+
+**[`POST /api/Pay`](https://test-ipspj-demopay.victoriabank.md/swagger/index.html)** (OpenAPI schema `InitQrPayRequest`) sends JSON `{ "qrHeaderUUID": "<uuid>" }` (nullable in the spec). That UUID is the **QR header** you got from **`POST /api/v1/qr`** on the main IPS API. The demopay service **simulates a payer completing a payment** against that QR so you can test end-to-end flows (status, signals, reconciliation) **without a real banking app or live money**. Sandbox/test only.
 
 ```typescript
 import { DemoPayClient } from "victoriabank-mia-integration";

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-03-29
+
+### Added
+
+- README: MIA × Victoriabank banner image (linked to [MIA Business (P2B)](https://www.victoriabank.md/en/operatiuni-curente/mia-business)); product row in the docs table; `assets/` shipped with the npm package so the README image resolves on npmjs.com.
+
 ## [1.0.0] - 2026-03-29
 
 First release of **victoriabank-mia-integration** — Node.js / TypeScript client for the Victoria Bank **Business IPS (MIA) Integration API** (spec **v2.0.18**).
