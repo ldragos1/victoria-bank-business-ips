@@ -10,18 +10,12 @@ import {
   type TokenResponse,
   type VictoriaBankClientConfig,
 } from "./types";
+import { trimTrailingSlashes } from "./url-utils";
 
 const DEFAULT_REFRESH_BUFFER_MS = 60_000;
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 500;
-
-/** Strip trailing `/` without regex (linear time; avoids ReDoS on uncontrolled URLs). */
-function trimTrailingSlashes(s: string): string {
-  let i = s.length;
-  while (i > 0 && s[i - 1] === "/") i -= 1;
-  return i === s.length ? s : s.slice(0, i);
-}
 
 function joinUrl(base: string, path: string): string {
   const b = trimTrailingSlashes(base);

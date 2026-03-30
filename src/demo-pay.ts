@@ -3,6 +3,8 @@
  * Swagger: https://test-ipspj-demopay.victoriabank.md/swagger/index.html
  */
 
+import { trimTrailingSlashes } from "./url-utils";
+
 export interface DemoPayClientConfig {
   /** Default: `https://test-ipspj-demopay.victoriabank.md` */
   baseUrl?: string;
@@ -14,9 +16,8 @@ export class DemoPayClient {
   private readonly fetchImpl: typeof fetch;
 
   constructor(config: DemoPayClientConfig = {}) {
-    this.baseUrl = (config.baseUrl ?? "https://test-ipspj-demopay.victoriabank.md").replace(
-      /\/+$/,
-      ""
+    this.baseUrl = trimTrailingSlashes(
+      config.baseUrl ?? "https://test-ipspj-demopay.victoriabank.md"
     );
     this.fetchImpl = config.fetch ?? globalThis.fetch;
   }
