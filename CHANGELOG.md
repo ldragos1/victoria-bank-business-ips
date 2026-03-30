@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-03-30
+
+### Security
+
+- **ReDoS** — Trailing-slash normalization on API base URLs no longer uses regex on uncontrolled input. `VictoriaBankClient` and `DemoPayClient` use a shared linear-time helper in `src/url-utils.ts` (`trimTrailingSlashes`) to satisfy CodeQL `js/polynomial-redos`.
+
+### Changed
+
+- **CI** — Workflow sets `permissions: contents: read` on `GITHUB_TOKEN` (least privilege; CodeQL `actions/missing-workflow-permissions`).
+
+### Chore
+
+- Ignore `*.tgz` npm pack artifacts in `.gitignore`.
+
 ## [1.0.4] - 2026-03-30
 
 ### Added
