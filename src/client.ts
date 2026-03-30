@@ -16,8 +16,15 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 500;
 
+/** Strip trailing `/` without regex (linear time; avoids ReDoS on uncontrolled URLs). */
+function trimTrailingSlashes(s: string): string {
+  let i = s.length;
+  while (i > 0 && s[i - 1] === "/") i -= 1;
+  return i === s.length ? s : s.slice(0, i);
+}
+
 function joinUrl(base: string, path: string): string {
-  const b = base.replace(/\/+$/, "");
+  const b = trimTrailingSlashes(base);
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${b}${p}`;
 }
@@ -64,7 +71,7 @@ export class VictoriaBankClient {
   private readonly retries: number;
 
   constructor(config: VictoriaBankClientConfig & { tokenRefreshBufferMs?: number }) {
-    this.baseUrl = config.baseUrl.replace(/\/+$/, "");
+    this.baseUrl = trimTrailingSlashes(config.baseUrl);
     this.username = config.username;
     this.password = config.password;
     this.fetchImpl = config.fetch ?? globalThis.fetch;
