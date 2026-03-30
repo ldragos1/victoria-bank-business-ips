@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **QR errors & warnings catalog** (`QR_MESSAGES`) — typed constant with all 43 errors and 10 warnings from the bank's IPS QR facility, sourced from the official "Errors and Warnings QR" PDF (now bundled as `docs/errors-and-warnings-qr.pdf`).
+- **Lookup helpers**: `getQrMessage`, `getQrMessagesByCode`, `getQrErrors`, `getQrWarnings`, `matchQrErrorCode` — find catalog entries by numeric code, severity, or API error code string (`EQ7`, `WQ5`, `EQV|…` demo-pay format).
+- **Client-side QR validation**: `validateNewQrRequest`, `validateQrExtension` — pre-flight checks that catch request issues the IPS would reject (EQ1–EQ14), before making the HTTP call. Returns `QrValidationIssue[]` with mapped error codes and human-readable messages.
 - **`extractFourthSegmentFromReference`** — returns the full 4th pipe segment for `reverseTransaction` (distinct from RRN / last-12-chars).
 - Ship the official **Victoria Bank Business IPS Integration API** specification PDF **v2.0.18** under `docs/` (included in the npm package).
 

@@ -3,6 +3,16 @@ export {
 } from "./client";
 export { DemoPayClient, type DemoPayClientConfig } from "./demo-pay";
 export {
+  getQrErrors,
+  getQrMessage,
+  getQrMessagesByCode,
+  getQrWarnings,
+  matchQrErrorCode,
+  QR_MESSAGES,
+  type QrMessage,
+  type QrMessageSeverity,
+} from "./qr-errors";
+export {
   createClientFromEnv,
   type CreateClientFromEnvOptions,
   createClientFromSettings,
@@ -14,6 +24,11 @@ export {
   extractRrnFromReference,
   splitPaymentReference,
 } from "./signal-utils";
+export {
+  validateNewQrRequest,
+  validateQrExtension,
+  type QrValidationIssue,
+} from "./validate";
 export {
   VictoriaBankApiError,
   type BankSignalPayload,

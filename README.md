@@ -24,6 +24,7 @@ Node.js / TypeScript client for **Victoria Bank Business IPS Integration API** �
 | Source | Notes |
 |--------|--------|
 | **Specification (v2.0.18)** | Authoritative document — [Victoria Bank Business IPS Integration API](./docs/victoria-bank-business-ips-integration-api-v2.0.18.pdf) *(PDF bundled in this repo and npm package; © Victoria Bank)*. |
+| **QR errors & warnings** | IPS QR error/warning catalog — [Errors and Warnings QR](./docs/errors-and-warnings-qr.pdf) *(BNM IPS facility "Q"; bundled in this repo)*. |
 | **Swagger (test)** | Machine-readable API + try-it UI — [test-ipspj.victoriabank.md/index.html](https://test-ipspj.victoriabank.md/index.html) |
 | **MIA Business (product)** | Bank product page — [Victoriabank — MIA Business (P2B)](https://www.victoriabank.md/en/operatiuni-curente/mia-business) |
 
@@ -285,7 +286,7 @@ No `authenticate()`, no manual env mapping, no NestJS adapter needed.
 
 ## Errors
 
-Bank JSON errors often include **`errorCode`** and **`description`**. **BNM / QR** codes may look like **`EQ1`**, **`EQV|…`** (facility + code); **Victoria Bank** codes typically use a **`VB`** prefix (e.g. **`VB10403`**). A separate bank attachment documents BNM QR messages; treat codes as authoritative for support.
+Bank JSON errors often include **`errorCode`** and **`description`**. **BNM / QR** codes may look like **`EQ1`**, **`EQV|…`** (facility + code); **Victoria Bank** codes typically use a **`VB`** prefix (e.g. **`VB10403`**). The bank's **QR errors & warnings** attachment (bundled as `docs/errors-and-warnings-qr.pdf`) documents all BNM IPS QR messages — this SDK ships the full catalog as a typed constant (`QR_MESSAGES`) with lookup helpers.
 
 **HTTP:** **`401`** — missing/invalid `Authorization`, or expired access token. **`5xx`** — server-side; the client may **retry** (see `retries`). Successful responses are typically **`2xx`** (e.g. **`204`** for some deletes).
 
@@ -316,6 +317,166 @@ try {
   }
 }
 ```
+
+### QR errors & warnings catalog
+
+The IPS defines **43 errors** and **10 warnings** in the QR facility (codes `EQ1`–`EQ43`, `WQ1`–`WQ10`). This SDK ships the full catalog as `QR_MESSAGES` with typed lookup helpers.
+
+**Lookup by code:**
+
+```typescript
+import { getQrMessage, getQrMessagesByCode, matchQrErrorCode } from "victoriabank-mia-integration";
+
+getQrMessage(7, "error");
+// → { code: 7, severity: "error", description: "Target QR code does not exist" }
+
+getQrMessagesByCode(1);
+// → [{ code: 1, severity: "warning", … }, { code: 1, severity: "error", … }]
+```
+
+**Match an API error code or demo-pay text:**
+
+```typescript
+matchQrErrorCode("EQ7");
+// → { code: 7, severity: "error", description: "Target QR code does not exist" }
+
+matchQrErrorCode("EQV|Target QR code does not exist");
+// → same match (demo-pay plain-text format)
+```
+
+**Use with `VictoriaBankApiError`:**
+
+```typescript
+import { VictoriaBankApiError, matchQrErrorCode } from "victoriabank-mia-integration";
+
+try {
+  await client.createQr(/* … */);
+} catch (e) {
+  if (e instanceof VictoriaBankApiError && e.errorCode) {
+    const qrMsg = matchQrErrorCode(e.errorCode);
+    if (qrMsg) {
+      console.log(`IPS QR ${qrMsg.severity} #${qrMsg.code}: ${qrMsg.description}`);
+    }
+  }
+}
+```
+
+**Helpers:** `QR_MESSAGES`, `getQrMessage`, `getQrMessagesByCode`, `getQrErrors`, `getQrWarnings`, `matchQrErrorCode`.
+
+<details>
+<summary><strong>Full QR error catalog (EQ1–EQ43)</strong></summary>
+
+| Code | Description |
+|------|-------------|
+| EQ1 | When creating dynamic or static QR code request body must contain extension object |
+| EQ2 | Free amountType is not allowed for dynamic and hybrid QR codes. Use Fixed or Controlled |
+| EQ3 | Invalid set of amountMin, amount and amountMax for given amountType |
+| EQ4 | TTL is out of allowed range |
+| EQ5 | Can not validate QR code extension as at least one of the following parameters is not configured: TTL_MIN_SS, TTL_MAX_SS |
+| EQ6 | Can not create QR code as at least one of the following parameters is not configured: QRC_PREFIX, QRC_PROVIDER |
+| EQ7 | Target QR code does not exist |
+| EQ8 | Participant can modify or inquire into own QR codes only |
+| EQ9 | New extensions are not allowed when QR code status is … |
+| EQ10 | New extensions are not allowed for dynamic QR codes |
+| EQ11 | ttl is present, yet not expected for static QR codes |
+| EQ12 | Field value is unparsable or non-positive |
+| EQ13 | ttl is missing, yet required for dynamic and hybrid QR codes |
+| EQ14 | Inconsistent values of amountMin, amount, amountMax |
+| EQ15 | Payment is not allowed when QR code status is … |
+| EQ16 | QR code is locked by payment in progress |
+| EQ17 | QR code is not complete to support transaction. Extension is missing or not Active |
+| EQ18 | QR code expired |
+| EQ19 | Target QR extension does not exist |
+| EQ20 | Requested amount is not valid. Cryptogram denied |
+| EQ21 | Creditor agent is not recognized |
+| EQ22 | QR code is already impossible to pay. Cancellation is neither relevant nor applicable |
+| EQ23 | Cancellation of extension is allowed only for hybrid QR codes |
+| EQ24 | Cancellation of extension is impossible as target QR code has no extension |
+| EQ25 | QR code extension is already impossible to pay. Cancellation is neither relevant nor possible |
+| EQ26 | QR code extension expired |
+| EQ27 | Lock either doesn't exist or belongs to other participant |
+| EQ28 | Wrong target QR code. Lock management is impossible for a hybrid QR code without extension |
+| EQ29 | Lock either does not exist or already expired |
+| EQ30 | Invalid boc value |
+| EQ31 | Invalid ttc value |
+| EQ32 | QRC_CRYPTO_SIGNER parameter is not defined |
+| EQ33 | Unauthorized signer of the QR code cryptogram |
+| EQ34 | Certificate needed to check QR code cryptogram is missing or inactive |
+| EQ35 | QR code cryptogram has invalid signature |
+| EQ36 | Certificate ownership error detected when checking QR code cryptogram |
+| EQ37 | QR code cryptogram expired |
+| EQ38 | Cannot find in payment message path(s) required by QR code cryptogram |
+| EQ39 | Mismatch of parameter values in payment and parent QR code |
+| EQ40 | Payment against QR code must have a cryptogram |
+| EQ41 | Invalid currency |
+| EQ42 | Outgoing signal delivery retries are not possible as at least one of required setting is not defined |
+| EQ43 | Outgoing signal delivery retry period must be less than archiving threshold |
+
+</details>
+
+<details>
+<summary><strong>Full QR warning catalog (WQ1–WQ10)</strong></summary>
+
+| Code | Description |
+|------|-------------|
+| WQ1 | Lock management is neither required nor possible for static QR codes |
+| WQ2 | Target QR code extension is not found when landing payment |
+| WQ3 | Unexpected status of QR code extension when landing payment |
+| WQ4 | QR code lock is expected yet missing when landing payment |
+| WQ5 | Payment amount conflicts with that requested in QR code |
+| WQ6 | Signal ignored. Payment with given reference for given payment system already registered |
+| WQ7 | Given payment system is unknown |
+| WQ8 | Given dynamic or hybrid QR code already paid |
+| WQ9 | Given payment system is not expected in payment signals coming from participants |
+| WQ10 | Payment via the given payment system is not expected by payee |
+
+</details>
+
+## Client-side QR validation
+
+Optional **pre-flight validation** helpers catch request issues that the IPS would reject — before making the HTTP call. Mapped to the bank's QR error catalog codes.
+
+```typescript
+import { validateNewQrRequest } from "victoriabank-mia-integration";
+
+const issues = validateNewQrRequest({
+  header: { qrType: "DYNM", amountType: "Free", pmtContext: "e" },
+  extension: {
+    creditorAccount: { iban: "MD00..." },
+  },
+});
+// [
+//   { code: 2, message: "Free amountType is not allowed for dynamic and hybrid QR codes …(EQ2)." },
+//   { code: 13, message: "TTL is missing, yet required for dynamic and hybrid QR codes (EQ13)." },
+// ]
+```
+
+**For extensions on existing QR codes:**
+
+```typescript
+import { validateQrExtension } from "victoriabank-mia-integration";
+
+const issues = validateQrExtension("HYBR", "Fixed", {
+  creditorAccount: { iban: "MD00..." },
+  amount: { sum: 50, currency: "MDL" },
+  ttl: { length: 60, units: "mm" },
+});
+// [] — valid
+```
+
+**Checks performed** (mapped to IPS error codes):
+
+| Check | IPS code | Rule |
+|-------|----------|------|
+| Extension object required | EQ1 | DYNM and STAT require `extension` in the request body |
+| Free + DYNM/HYBR | EQ2 | Use `Fixed` or `Controlled` for dynamic / hybrid QR codes |
+| Amount field mismatch | EQ3 | `Fixed` needs `amount`; `Controlled` needs `amountMin` + `amountMax` |
+| TTL on STAT | EQ11 | Static QR codes must **not** include TTL |
+| TTL missing for DYNM/HYBR | EQ13 | Dynamic and hybrid QR codes **require** TTL |
+| Inconsistent amount fields | EQ14 | `Fixed` must not include min/max; `Controlled` must not include `amount` |
+| Extension on DYNM | EQ10 | Dynamic QR codes do not support new extensions after creation |
+
+**Helpers:** `validateNewQrRequest`, `validateQrExtension`. Return type: `QrValidationIssue[]`.
 
 ## Build from source
 
