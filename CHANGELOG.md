@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-03-30
+
 ### Added
 
 - **QR errors & warnings catalog** (`QR_MESSAGES`) — typed constant with all 43 errors and 10 warnings from the bank's IPS QR facility, sourced from the official "Errors and Warnings QR" PDF (now bundled as `docs/errors-and-warnings-qr.pdf`).
