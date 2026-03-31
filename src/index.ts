@@ -47,6 +47,7 @@ export {
   type QrStatusResponse,
   type QrTtl,
   type QrType,
+  type ListTransactionsParams,
   type ReconciliationTransaction,
   type ReconciliationTransactionsResponse,
   type SignalCode,

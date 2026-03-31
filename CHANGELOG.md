@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Reconciliation** — `listTransactions` now sends **`dateFrom` / `dateTo`** (and optional **`messageId`**) per bank OpenAPI / integration guides; legacy **`datefrom` / `dateto`** input is still accepted and normalized.
+
 ## [1.0.8] - 2026-03-31
 
 ### Added

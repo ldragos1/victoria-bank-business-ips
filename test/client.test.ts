@@ -511,7 +511,7 @@ describe("VictoriaBankClient", () => {
     await client.reverseTransaction(ref);
   });
 
-  it("listTransactions sends GET with datefrom and dateto query params", async () => {
+  it("listTransactions sends GET with dateFrom and dateTo (camelCase, bank OpenAPI)", async () => {
     const body = JSON.stringify({
       transactionsInfo: [
         {
@@ -533,8 +533,8 @@ describe("VictoriaBankClient", () => {
       }
       expect(init?.method).toBe("GET");
       expect(u).toContain("/api/v1/reconciliation/transactions");
-      expect(u).toContain("datefrom=2024-08-01");
-      expect(u).toContain("dateto=2024-08-13");
+      expect(u).toContain("dateFrom=2024-08-01");
+      expect(u).toContain("dateTo=2024-08-13");
       return new Response(body, { status: 200 });
     });
     const client = new VictoriaBankClient({
@@ -544,11 +544,56 @@ describe("VictoriaBankClient", () => {
       fetch: fetchMock as typeof fetch,
     });
     const result = await client.listTransactions({
-      datefrom: "2024-08-01",
-      dateto: "2024-08-13",
+      dateFrom: "2024-08-01",
+      dateTo: "2024-08-13",
     });
     expect(result.transactionsInfo).toHaveLength(1);
     expect(result.transactionsInfo[0].id).toBe("MOLDMD2XAXXX240206250390000001094");
+  });
+
+  it("listTransactions maps legacy datefrom/dateto to dateFrom/dateTo on the wire", async () => {
+    const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      const u = String(url);
+      if (u.includes("/api/identity/token")) {
+        return new Response(tokenJson(), { status: 200 });
+      }
+      expect(u).toContain("dateFrom=2024-01-01");
+      expect(u).toContain("dateTo=2024-01-31");
+      expect(u).not.toContain("datefrom=");
+      return new Response(JSON.stringify({ transactionsInfo: [] }), { status: 200 });
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+    });
+    await client.listTransactions({
+      datefrom: "2024-01-01",
+      dateto: "2024-01-31",
+    });
+  });
+
+  it("listTransactions passes optional messageId", async () => {
+    const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      const u = String(url);
+      if (u.includes("/api/identity/token")) {
+        return new Response(tokenJson(), { status: 200 });
+      }
+      expect(u).toContain("messageId=msg-1");
+      return new Response(JSON.stringify({ transactionsInfo: [] }), { status: 200 });
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+    });
+    await client.listTransactions({
+      dateFrom: "2024-08-01",
+      dateTo: "2024-08-13",
+      messageId: "msg-1",
+    });
   });
 
   it("getLastSignal sends GET to /api/v1/signal/{uuid}", async () => {

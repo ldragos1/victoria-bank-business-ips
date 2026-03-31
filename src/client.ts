@@ -1,6 +1,7 @@
 import {
   VictoriaBankApiError,
   type BankSignalPayload,
+  type ListTransactionsParams,
   type NewQrRequest,
   type NewQrResponse,
   type QrExtensionPayload,
@@ -367,16 +368,25 @@ export class VictoriaBankClient {
     );
   }
 
-  /** **List of transactions** — PDF: reconciliation; `datefrom` / `dateto` as `YYYY-MM-DD`. */
-  async listTransactions(params: {
-    datefrom: string;
-    dateto: string;
-  }): Promise<ReconciliationTransactionsResponse> {
+  /**
+   * **List of transactions** — reconciliation; **`dateFrom` / `dateTo`** as `YYYY-MM-DD` (inclusive).
+   * Optional **`messageId`** filters by message ID. Legacy **`datefrom` / `dateto`** keys are accepted; the HTTP query always uses camelCase, matching the bank OpenAPI and integration guides.
+   */
+  async listTransactions(
+    params: ListTransactionsParams
+  ): Promise<ReconciliationTransactionsResponse> {
+    const dateFrom =
+      "dateFrom" in params ? params.dateFrom : params.datefrom;
+    const dateTo = "dateTo" in params ? params.dateTo : params.dateto;
     return this.request<ReconciliationTransactionsResponse>(
       "GET",
       "/api/v1/reconciliation/transactions",
       {
-        query: { datefrom: params.datefrom, dateto: params.dateto },
+        query: {
+          dateFrom,
+          dateTo,
+          messageId: params.messageId,
+        },
       }
     );
   }

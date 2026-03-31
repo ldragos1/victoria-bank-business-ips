@@ -144,6 +144,24 @@ export interface ReconciliationTransactionsResponse {
   transactionsInfo: ReconciliationTransaction[];
 }
 
+/**
+ * Query parameters for **`GET /api/v1/reconciliation/transactions`** (bank docs / OpenAPI use camelCase).
+ *
+ * You may pass either **`dateFrom` / `dateTo`** or the legacy PDF names **`datefrom` / `dateto`** — both are sent to the API as **`dateFrom`** and **`dateTo`**.
+ */
+export type ListTransactionsParams =
+  | {
+      dateFrom: string;
+      dateTo: string;
+      messageId?: string;
+    }
+  | {
+      /** @deprecated Prefer camelCase `dateFrom` / `dateTo` — same HTTP query after normalization. */
+      datefrom: string;
+      dateto: string;
+      messageId?: string;
+    };
+
 export interface VictoriaBankClientConfig {
   /**
    * API base URL without trailing slash.
