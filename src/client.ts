@@ -16,6 +16,8 @@ const DEFAULT_REFRESH_BUFFER_MS = 60_000;
 const DEFAULT_TIMEOUT_MS = 30_000;
 const DEFAULT_RETRIES = 2;
 const RETRY_BASE_DELAY_MS = 500;
+/** Matches IPS Integration API PDF (v2.0.18); bank OpenAPI samples may use `/identity/token` instead. */
+const DEFAULT_IDENTITY_TOKEN_PATH = "/api/identity/token";
 
 function joinUrl(base: string, path: string): string {
   const b = trimTrailingSlashes(base);
@@ -52,6 +54,7 @@ function buildErrorMessage(prefix: string, body: unknown): string {
 
 export class VictoriaBankClient {
   private readonly baseUrl: string;
+  private readonly identityTokenPath: string;
   private readonly username: string;
   private readonly password: string;
   private readonly fetchImpl: typeof fetch;
@@ -66,6 +69,12 @@ export class VictoriaBankClient {
 
   constructor(config: VictoriaBankClientConfig & { tokenRefreshBufferMs?: number }) {
     this.baseUrl = trimTrailingSlashes(config.baseUrl);
+    this.identityTokenPath =
+      config.identityTokenPath && config.identityTokenPath.length > 0
+        ? config.identityTokenPath.startsWith("/")
+          ? config.identityTokenPath
+          : `/${config.identityTokenPath}`
+        : DEFAULT_IDENTITY_TOKEN_PATH;
     this.username = config.username;
     this.password = config.password;
     this.fetchImpl = config.fetch ?? globalThis.fetch;
@@ -147,7 +156,7 @@ export class VictoriaBankClient {
   }
 
   private async postFormToken(body: URLSearchParams): Promise<TokenResponse> {
-    const url = joinUrl(this.baseUrl, "/api/identity/token");
+    const url = joinUrl(this.baseUrl, this.identityTokenPath);
 
     let lastError: unknown;
     for (let attempt = 0; attempt <= this.retries; attempt++) {

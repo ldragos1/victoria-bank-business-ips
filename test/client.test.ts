@@ -13,6 +13,26 @@ function tokenJson() {
 }
 
 describe("VictoriaBankClient", () => {
+  it("authenticate posts password grant to custom identityTokenPath when set", async () => {
+    const calls: { url: string; body: string }[] = [];
+    const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {
+      calls.push({ url: String(url), body: String(init?.body ?? "") });
+      return new Response(tokenJson(), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+    const client = new VictoriaBankClient({
+      baseUrl: "https://api.example/",
+      identityTokenPath: "/identity/token",
+      username: "user@x",
+      password: "secret",
+      fetch: fetchMock as typeof fetch,
+    });
+    await client.authenticate();
+    expect(calls[0]?.url).toBe("https://api.example/identity/token");
+  });
+
   it("authenticate posts password grant to /api/identity/token", async () => {
     const calls: { url: string; body: string }[] = [];
     const fetchMock = vi.fn(async (url: string | URL, init?: RequestInit) => {

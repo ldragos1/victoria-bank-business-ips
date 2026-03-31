@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`identityTokenPath`** on `VictoriaBankClient` (default `/api/identity/token`) — override with `/identity/token` when bank OpenAPI / integration HTML matches that path. Env: `VICTORIA_BANK_IPS_IDENTITY_TOKEN_PATH`.
+
+### Changed
+
+- README: production base URL `https://ips-api-pj.vb.md`; notes on `json-test.json` scope vs this SDK; token path variants.
+
 ## [1.0.6] - 2026-03-30
 
 ### Security

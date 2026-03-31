@@ -147,9 +147,15 @@ export interface ReconciliationTransactionsResponse {
 export interface VictoriaBankClientConfig {
   /**
    * API base URL without trailing slash.
-   * Test: `https://test-ipspj.victoriabank.md`
+   * Test: `https://test-ipspj.victoriabank.md` · Production (bank guide): `https://ips-api-pj.vb.md`
    */
   baseUrl: string;
+  /**
+   * OAuth2 token endpoint path (appended to {@link baseUrl}).
+   * Default **`/api/identity/token`** matches the official IPS Integration API PDF (v2.0.18).
+   * Some bank materials (OpenAPI / integration HTML) show **`/identity/token`** without the `/api` prefix — set this if your environment returns **404** on the default path.
+   */
+  identityTokenPath?: string;
   username: string;
   password: string;
   /**

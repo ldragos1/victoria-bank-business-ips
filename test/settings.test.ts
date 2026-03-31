@@ -39,6 +39,32 @@ describe("createClientFromSettings", () => {
     await client.authenticate();
     expect(calls[0]).toBe("https://custom.example/api/identity/token");
   });
+
+  it("respects identityTokenPath (bank OpenAPI style /identity/token)", async () => {
+    const calls: string[] = [];
+    const fetchMock = async (url: string | URL) => {
+      calls.push(String(url));
+      return new Response(
+        JSON.stringify({
+          accessToken: "t",
+          tokenType: "bearer",
+          expiresIn: 3600,
+          refreshToken: "r",
+          refreshExpiresIn: 18000,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    };
+    const client = createClientFromSettings({
+      baseUrl: "https://custom.example",
+      identityTokenPath: "/identity/token",
+      username: "u",
+      password: "p",
+      fetch: fetchMock as typeof fetch,
+    });
+    await client.authenticate();
+    expect(calls[0]).toBe("https://custom.example/identity/token");
+  });
 });
 
 describe("defaultBaseUrlTest", () => {
@@ -93,4 +119,30 @@ describe("createClientFromEnv", () => {
     expect(calls[0]).toBe("https://test-ipspj.victoriabank.md/api/identity/token");
   });
 
+  it("uses VICTORIA_BANK_IPS_IDENTITY_TOKEN_PATH when set", async () => {
+    vi.stubEnv(envKeys.username, "u");
+    vi.stubEnv(envKeys.password, "p");
+    vi.stubEnv(envKeys.identityTokenPath, "/identity/token");
+
+    const calls: string[] = [];
+    const fetchMock = async (url: string | URL) => {
+      calls.push(String(url));
+      return new Response(
+        JSON.stringify({
+          accessToken: "t",
+          tokenType: "bearer",
+          expiresIn: 3600,
+          refreshToken: "r",
+          refreshExpiresIn: 18000,
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    };
+
+    const client = createClientFromEnv({ fetch: fetchMock as typeof fetch });
+    await client.authenticate();
+    expect(calls[0]).toBe(
+      "https://test-ipspj.victoriabank.md/identity/token"
+    );
+  });
 });
