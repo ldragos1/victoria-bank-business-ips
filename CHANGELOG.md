@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **`identityTokenPath`** on `VictoriaBankClient` (default `/api/identity/token`) — override with `/identity/token` when bank OpenAPI / integration HTML matches that path. Env: `VICTORIA_BANK_IPS_IDENTITY_TOKEN_PATH`.
+- Bundle **`docs/VBCA.crt`** (Victoria Bank public certificate for JWT verification on inbound **`POST /api/signals`**). Export **`VICTORIA_BANK_SIGNAL_PUBLIC_CERT_PATH`** — absolute path to the PEM file when the package is installed.
 
 ### Changed
 

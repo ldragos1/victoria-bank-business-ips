@@ -19,6 +19,7 @@ export {
   defaultBaseUrlTest,
   envKeys,
 } from "./settings";
+export { VICTORIA_BANK_SIGNAL_PUBLIC_CERT_PATH } from "./signal-cert";
 export {
   extractFourthSegmentFromReference,
   extractRrnFromReference,
